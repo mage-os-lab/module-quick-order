@@ -1,0 +1,8 @@
+parameters:
+    level: 8
+    paths:
+        - .
+    excludePaths:
+        - vendor/*
+        # needs Magento's integration test framework (dev/tests/integration), which is not on the composer autoloader
+        - Test/Integration/*

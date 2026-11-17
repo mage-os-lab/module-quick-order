@@ -1,0 +1,10 @@
+The CSV file is too large.,Il file CSV è troppo grande.
+Please upload a .csv or .txt file.,Carica un file .csv o .txt.
+Please order at most %1 SKUs at a time.,Ordina al massimo %1 SKU alla volta.
+Please enter at least one SKU.,Inserisci almeno uno SKU.
+%1: %2,%1: %2
+%1 product(s) added to your cart.,%1 prodotto/i aggiunto/i al carrello.
+Quick Order,Ordine rapido
+"One product per line: SKU,quantity","Un prodotto per riga: SKU,quantità"
+"Or upload a CSV file (columns: sku, qty)","Oppure carica un file CSV (colonne: sku, qty)"
+Add to Cart,Aggiungi al carrello

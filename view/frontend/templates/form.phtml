@@ -1,0 +1,28 @@
+<?php
+declare(strict_types=1);
+
+/** @var \Magento\Framework\View\Element\Template $block */
+/** @var \Magento\Framework\Escaper $escaper */
+?>
+<form action="<?= $escaper->escapeUrl($block->getUrl('quickorder/index/add')) ?>"
+      method="post"
+      enctype="multipart/form-data"
+      class="max-w-xl space-y-4">
+    <?= /* @noEscape */ $block->getBlockHtml('formkey') ?>
+    <div>
+        <label for="quickorder-lines" class="label">
+            <?= $escaper->escapeHtml(__('One product per line: SKU,quantity')) ?>
+        </label>
+        <textarea id="quickorder-lines" name="lines" rows="8" class="input-text form-input w-full"
+                  placeholder="24-MB01,2&#10;24-MB02,1"></textarea>
+    </div>
+    <div>
+        <label for="quickorder-csv" class="label">
+            <?= $escaper->escapeHtml(__('Or upload a CSV file (columns: sku, qty)')) ?>
+        </label>
+        <input id="quickorder-csv" type="file" name="csv" accept=".csv,text/csv,text/plain">
+    </div>
+    <button type="submit" class="action primary btn btn-primary">
+        <?= $escaper->escapeHtml(__('Add to Cart')) ?>
+    </button>
+</form>

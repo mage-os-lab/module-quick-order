@@ -8,3 +8,14 @@ Quick Order,Commande rapide
 "One product per line: SKU,quantity","Un produit par ligne : SKU,quantité"
 "Or upload a CSV file (columns: sku, qty)","Ou envoyez un fichier CSV (colonnes : sku, qty)"
 Add to Cart,Ajouter au panier
+Unknown SKU.,SKU inconnu.
+In stock,En stock
+Out of stock,En rupture de stock
+SKU or product name,SKU ou nom du produit
+Product,Produit
+Price,Prix
+Stock,Stock
+Qty,Qté
+"To remove a line, clear its SKU or set its quantity to 0, then preview again.","Pour retirer une ligne, videz son SKU ou mettez sa quantité à 0, puis relancez l'aperçu."
+Preview,Aperçu
+Please preview fewer configurable products at a time.,Veuillez prévisualiser moins de produits configurables à la fois.

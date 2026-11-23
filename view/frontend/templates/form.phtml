@@ -3,17 +3,28 @@ declare(strict_types=1);
 
 /** @var \Magento\Framework\View\Element\Template $block */
 /** @var \Magento\Framework\Escaper $escaper */
+
+// rows of MageOS\QuickOrder\Model\Preview::build(), followed by empty lines to type in
+// ponytail: two form fields per row and per variant; past PHP's max_input_vars (1000), post the table as JSON
+$empty = ['sku' => '', 'qty' => 1, 'name' => '', 'image' => '', 'price' => '', 'salable' => null, 'error' => '',
+    'matrix' => null];
+$rows = [...(array) $block->getData('rows'), $empty, $empty, $empty];
+$previewed = count($rows) > 3;
+$stock = fn (?bool $salable) => $salable === null ? '' : ($salable ? __('In stock') : __('Out of stock'));
+$index = 0;
 ?>
+<?php // posts to "add" so that Luma refreshes the cart section; the Preview button overrides it ?>
 <form action="<?= $escaper->escapeUrl($block->getUrl('quickorder/index/add')) ?>"
       method="post"
       enctype="multipart/form-data"
-      class="max-w-xl space-y-4">
+      class="quickorder space-y-4">
     <?= /* @noEscape */ $block->getBlockHtml('formkey') ?>
-    <div>
+    <div class="max-w-xl">
         <label for="quickorder-lines" class="label">
             <?= $escaper->escapeHtml(__('One product per line: SKU,quantity')) ?>
         </label>
-        <textarea id="quickorder-lines" name="lines" rows="8" class="input-text form-input w-full"
+        <textarea id="quickorder-lines" name="lines" rows="<?= $previewed ? 3 : 8 ?>"
+                  class="input-text form-input w-full"
                   placeholder="24-MB01,2&#10;24-MB02,1"></textarea>
     </div>
     <div>
@@ -22,7 +33,144 @@ declare(strict_types=1);
         </label>
         <input id="quickorder-csv" type="file" name="csv" accept=".csv,text/csv,text/plain">
     </div>
-    <button type="submit" class="action primary btn btn-primary">
-        <?= $escaper->escapeHtml(__('Add to Cart')) ?>
+
+    <datalist id="quickorder-suggest"
+              data-quickorder-suggest="<?= $escaper->escapeUrl($block->getUrl('quickorder/index/suggest')) ?>">
+    </datalist>
+    <div class="table-wrapper overflow-x-auto">
+        <?php // Luma styles "data table"; the [&_...] utilities give Hyvä the same cell spacing ?>
+        <table class="data table w-full text-left [&_td]:py-2 [&_td]:pr-4 [&_td]:align-top [&_th]:py-2 [&_th]:pr-4
+                      [&>tbody>tr]:border-t">
+            <caption class="table-caption sr-only"><?= $escaper->escapeHtml(__('Quick Order')) ?></caption>
+            <thead>
+                <tr>
+                    <th scope="col"></th>
+                    <th scope="col"><?= $escaper->escapeHtml(__('SKU or product name')) ?></th>
+                    <th scope="col"><?= $escaper->escapeHtml(__('Product')) ?></th>
+                    <th scope="col"><?= $escaper->escapeHtml(__('Price')) ?></th>
+                    <th scope="col"><?= $escaper->escapeHtml(__('Stock')) ?></th>
+                    <th scope="col"><?= $escaper->escapeHtml(__('Qty')) ?></th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($rows as $row): ?>
+                <?php $index++ ?>
+                <?php $skuField = $row['matrix'] ? 'matrix[]' : 'rows[' . $index . '][sku]' ?>
+                <tr>
+                    <td class="w-20">
+                        <?php if ($row['image']): ?>
+                            <img src="<?= $escaper->escapeUrl($row['image']) ?>" alt="" width="64" height="64"
+                                 loading="lazy">
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <input type="text"
+                               name="<?= $escaper->escapeHtmlAttr($skuField) ?>"
+                               value="<?= $escaper->escapeHtmlAttr($row['sku']) ?>"
+                               list="quickorder-suggest"
+                               autocomplete="off"
+                               class="input-text form-input"
+                               aria-label="<?= $escaper->escapeHtmlAttr(__('SKU or product name')) ?>"
+                               <?php if ($row['error']): ?>
+                                   aria-invalid="true" aria-describedby="quickorder-error-<?= (int) $index ?>"
+                               <?php endif; ?>>
+                        <?php if ($row['error']): ?>
+                            <div id="quickorder-error-<?= (int) $index ?>" class="mage-error text-red-600">
+                                <?= $escaper->escapeHtml($row['error']) ?>
+                            </div>
+                        <?php endif; ?>
+                    </td>
+                    <td><?= $escaper->escapeHtml($row['name']) ?></td>
+                    <td><?= $escaper->escapeHtml($row['price']) ?></td>
+                    <td><?= $escaper->escapeHtml($stock($row['salable'])) ?></td>
+                    <td>
+                        <?php if (!$row['matrix']): ?>
+                            <input type="number" name="rows[<?= (int) $index ?>][qty]"
+                                   value="<?= (float) $row['qty'] ?>"
+                                   min="0" step="any" class="input-text form-input qty w-24"
+                                   aria-label="<?= $escaper->escapeHtmlAttr(__('Qty')) ?>">
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <?php if ($row['matrix']): ?>
+                    <tr>
+                        <td></td>
+                        <td colspan="5">
+                            <table class="data table text-left">
+                                <thead>
+                                    <tr>
+                                        <th scope="col"><?= $escaper->escapeHtml($row['matrix']['corner']) ?></th>
+                                        <?php foreach ($row['matrix']['columns'] as $column): ?>
+                                            <th scope="col"><?= $escaper->escapeHtml($column) ?></th>
+                                        <?php endforeach; ?>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                <?php foreach ($row['matrix']['lines'] as $line): ?>
+                                    <tr>
+                                        <th scope="row"><?= $escaper->escapeHtml($line['label']) ?></th>
+                                        <?php foreach ($row['matrix']['columns'] as $position => $column): ?>
+                                            <?php $cell = $line['cells'][$position] ?? null ?>
+                                            <?php $index++ ?>
+                                            <?php
+                                            $cellQty = (float) ($cell['qty'] ?? 0);
+                                            $cellQty = $cellQty ? (string) $cellQty : '';
+                                            ?>
+                                            <td>
+                                                <?php if ($cell): ?>
+                                                    <input type="hidden" name="rows[<?= (int) $index ?>][sku]"
+                                                           value="<?= $escaper->escapeHtmlAttr($cell['sku']) ?>">
+                                                    <?php // an unavailable variant stays editable while it has a qty ?>
+                                                    <input type="number" name="rows[<?= (int) $index ?>][qty]"
+                                                           value="<?= $escaper->escapeHtmlAttr($cellQty) ?>"
+                                                           min="0" step="any" placeholder="0"
+                                                           class="input-text form-input qty w-24"
+                                                           title="<?= $escaper->escapeHtmlAttr($cell['sku']) ?>"
+                                                           aria-label="<?= $escaper->escapeHtmlAttr($cell['sku']) ?>"
+                                                           <?php if ($cell['error']): ?>
+                                                               aria-invalid="true"
+                                                               aria-describedby="quickorder-error-<?= (int) $index ?>"
+                                                           <?php elseif (!$cell['salable']): ?>
+                                                               disabled
+                                                           <?php endif; ?>>
+                                                    <div class="text-sm">
+                                                        <?= $escaper->escapeHtml($cell['price']) ?>
+                                                        <?php if (!$cell['salable']): ?>
+                                                            <?= $escaper->escapeHtml($stock(false)) ?>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                    <?php if ($cell['error']): ?>
+                                                        <div id="quickorder-error-<?= (int) $index ?>"
+                                                             class="mage-error text-red-600">
+                                                            <?= $escaper->escapeHtml($cell['error']) ?>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                <?php endif; ?>
+                                            </td>
+                                        <?php endforeach; ?>
+                                    </tr>
+                                <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                <?php endif; ?>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <p class="note text-sm">
+        <?= $escaper->escapeHtml(__('To remove a line, clear its SKU or set its quantity to 0, then preview again.')) ?>
+    </p>
+
+    <?php // first submit button: it is the one the Enter key triggers ?>
+    <button type="submit" formaction="<?= $escaper->escapeUrl($block->getUrl('quickorder')) ?>"
+            class="action btn <?= $previewed ? 'btn-secondary' : 'primary btn-primary' ?>">
+        <?= $escaper->escapeHtml(__('Preview')) ?>
     </button>
+    <?php if ($previewed): ?>
+        <button type="submit" class="action primary btn btn-primary">
+            <?= $escaper->escapeHtml(__('Add to Cart')) ?>
+        </button>
+    <?php endif; ?>
 </form>

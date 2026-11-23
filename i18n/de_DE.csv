@@ -8,3 +8,14 @@ Quick Order,Schnellbestellung
 "One product per line: SKU,quantity","Ein Produkt pro Zeile: SKU,Menge"
 "Or upload a CSV file (columns: sku, qty)","Oder laden Sie eine CSV-Datei hoch (Spalten: sku, qty)"
 Add to Cart,In den Warenkorb
+Unknown SKU.,Unbekannte SKU.
+In stock,Auf Lager
+Out of stock,Nicht auf Lager
+SKU or product name,SKU oder Produktname
+Product,Produkt
+Price,Preis
+Stock,Bestand
+Qty,Menge
+"To remove a line, clear its SKU or set its quantity to 0, then preview again.","Um eine Zeile zu entfernen, leeren Sie die SKU oder setzen Sie die Menge auf 0 und aktualisieren Sie die Vorschau."
+Preview,Vorschau
+Please preview fewer configurable products at a time.,Bitte zeigen Sie weniger konfigurierbare Produkte auf einmal in der Vorschau an.

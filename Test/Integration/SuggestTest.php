@@ -11,8 +11,10 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Tests the SKU / name suggestions of the quick order table.
+ *
+ * No DB isolation: the category index the suggestions read is only filled when the product save is committed.
  */
-#[DbIsolation(true)]
+#[DbIsolation(false)]
 class SuggestTest extends AbstractController
 {
     /**

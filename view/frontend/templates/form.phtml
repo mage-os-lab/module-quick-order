@@ -55,6 +55,7 @@ $index = 0;
             <tbody>
             <?php foreach ($rows as $row): ?>
                 <?php $index++ ?>
+                <?php // safe by construction: escapeHtmlAttr() would encode the brackets ?>
                 <?php $skuField = $row['matrix'] ? 'matrix[]' : 'rows[' . $index . '][sku]' ?>
                 <tr>
                     <td class="w-20">
@@ -65,7 +66,7 @@ $index = 0;
                     </td>
                     <td>
                         <input type="text"
-                               name="<?= $escaper->escapeHtmlAttr($skuField) ?>"
+                               name="<?= /* @noEscape */ $skuField ?>"
                                value="<?= $escaper->escapeHtmlAttr($row['sku']) ?>"
                                list="quickorder-suggest"
                                autocomplete="off"

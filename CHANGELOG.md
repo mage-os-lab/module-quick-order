@@ -2,19 +2,34 @@
 
 All notable changes to this module are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.1.0] - 2026-11-23
+
+Quick order lines can now be previewed, corrected and completed before anything reaches the cart, with product suggestions and a variant matrix for configurable products.
+
+Upgrade: on Hyvä, rebuild the theme's styles, as the form uses new Tailwind classes.
 
 ### Added
 
-- Preview table before adding to the cart: image, name, price, stock and, per line, the error the cart would raise, with SKU and quantity editable in place.
-- SKU / product name suggestions in the table's SKU fields (`/quickorder/index/suggest`).
-- Variant matrix for configurable SKUs: one quantity per variant, added to the cart as simple SKUs. A preview holds at most 500 rows, variants included.
+- Preview: a table shows each line before it reaches the cart, with image, name, price, stock and the error the cart would raise; SKU and quantity are corrected in place, then previewed again.
+- Suggestions: the table's SKU fields suggest products while a SKU or a product name is typed.
+- Configurable products: a configurable SKU opens a matrix of its variants, with one quantity per variant; variants go to the cart as their own simple SKUs.
+- A preview holds at most 500 rows, variants of configurable products included; beyond that, the customer is asked to preview fewer configurable products at a time.
 
 ### Changed
 
-- The form's first step is now *Preview*; *Add to Cart* appears once lines are previewed. Posting `lines` / `csv` straight to `/quickorder/index/add` still works.
-- A malformed `lines` parameter (an array) is ignored instead of failing.
-- New dependencies: `magento/module-configurable-product`, `magento/module-quote`, `magento/module-store`.
+- The form's first button is now *Preview*; *Add to Cart* appears once lines are previewed. Before, the form added the lines to the cart directly. Posting `lines` or `csv` straight to `/quickorder/index/add` still works.
+- The module now requires `magento/module-configurable-product`, `magento/module-quote` and `magento/module-store`, which are part of every Mage-OS installation.
+
+### Fixed
+
+- A request with a malformed `lines` parameter ended in an error page; it is now ignored.
+
+### Compatibility
+
+- Luma (4.0.0) and Hyvä Theme (1.5.4): suggestions, preview, variant matrix and add to cart were run on Mage-OS 4.0.0 with PHP 8.5.
+- Elasticsuite (2.12.2): run as the search engine under both themes; suggestions do not go through the search engine.
+- Hyvä Checkout and Loki Checkout: not applicable, the module stops at the cart.
+- The 500-row limit of a preview was not run against a catalog large enough to reach it.
 
 ## [1.0.0] - 2026-11-17
 

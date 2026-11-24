@@ -37,6 +37,22 @@ class SuggestTest extends AbstractController
     }
 
     /**
+     * SKUs that start with the query come before those that only contain it.
+     */
+    #[DataFixture(ProductFixture::class, ['sku' => '0-has-qoprefix-inside', 'name' => 'Inside'])]
+    #[DataFixture(ProductFixture::class, ['sku' => 'qoprefix-first', 'name' => 'First'])]
+    public function testSkuPrefixComesFirst(): void
+    {
+        $this->getRequest()->setParam('q', 'qoprefix');
+        $this->dispatch('quickorder/index/suggest');
+
+        $this->assertSame(
+            ['qoprefix-first', '0-has-qoprefix-inside'],
+            array_column(json_decode((string) $this->getResponse()->getBody(), true), 'sku')
+        );
+    }
+
+    /**
      * @return array<string, array{mixed, bool}>
      */
     public static function queries(): array

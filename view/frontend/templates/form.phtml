@@ -6,8 +6,8 @@ declare(strict_types=1);
 
 // rows of MageOS\QuickOrder\Model\Preview::build(), followed by empty lines to type in
 // ponytail: two form fields per row and per variant; past PHP's max_input_vars (1000), post the table as JSON
-$empty = ['sku' => '', 'qty' => 1, 'name' => '', 'image' => '', 'price' => '', 'salable' => null, 'error' => '',
-    'matrix' => null];
+$empty = ['sku' => '', 'qty' => 1, 'name' => '', 'image' => '', 'price' => '', 'total' => '', 'salable' => null,
+    'error' => '', 'matrix' => null];
 $rows = [...(array) $block->getData('rows'), $empty, $empty, $empty];
 $previewed = count($rows) > 3;
 $stock = fn (?bool $salable) => $salable === null ? '' : ($salable ? __('In stock') : __('Out of stock'));
@@ -32,6 +32,10 @@ $index = 0;
             <?= $escaper->escapeHtml(__('Or upload a CSV file (columns: sku, qty)')) ?>
         </label>
         <input id="quickorder-csv" type="file" name="csv" accept=".csv,text/csv,text/plain">
+        <a href="<?= $escaper->escapeUrl($block->getViewFileUrl('MageOS_QuickOrder::quick-order-sample.csv')) ?>"
+           download class="action underline">
+            <?= $escaper->escapeHtml(__('Download a sample file')) ?>
+        </a>
     </div>
 
     <datalist id="quickorder-suggest"
@@ -50,6 +54,7 @@ $index = 0;
                     <th scope="col"><?= $escaper->escapeHtml(__('Price')) ?></th>
                     <th scope="col"><?= $escaper->escapeHtml(__('Stock')) ?></th>
                     <th scope="col"><?= $escaper->escapeHtml(__('Qty')) ?></th>
+                    <th scope="col"><?= $escaper->escapeHtml(__('Subtotal')) ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -92,11 +97,12 @@ $index = 0;
                                    aria-label="<?= $escaper->escapeHtmlAttr(__('Qty')) ?>">
                         <?php endif; ?>
                     </td>
+                    <td><?= $escaper->escapeHtml($row['total']) ?></td>
                 </tr>
                 <?php if ($row['matrix']): ?>
                     <tr>
                         <td></td>
-                        <td colspan="5">
+                        <td colspan="6">
                             <table class="data table text-left">
                                 <thead>
                                     <tr>

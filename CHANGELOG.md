@@ -2,6 +2,34 @@
 
 All notable changes to this module are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+Upgrade: admin roles that must change the new settings need the resource *Stores > Settings > Configuration > Quick Order*. On Hyvä, rebuild the theme's styles.
+
+### Added
+
+- Settings under *Stores > Configuration > Sales > Quick Order*: *Enabled*, and *Allowed Customer Groups* to reserve the page to some groups. Defaults keep the page open to everyone.
+- Preview: the unit price follows the quantity (tier prices), and a *Subtotal* column shows the line's amount.
+- A comma is read as a decimal separator on lines split by a semicolon or a tab (`SKU;2,5`), as spreadsheets paste them.
+- A link to a sample CSV file under the file field.
+
+### Changed
+
+- *Add to Cart*: lines the cart refuses come back in the table with the cart's error, instead of a list of messages on the cart page; the customer lands on the cart only when every line was added.
+- A quantity that is not a number above 0 (`SKU,abc`, `SKU,0`) is reported on its line; it was read as 1 before.
+- A preview holds at most 490 rows instead of 500: with the form's other fields, 500 rows went past PHP's default `max_input_vars` and the last rows could be dropped.
+- Suggestions list the SKUs that start with what is typed first, then sort by SKU.
+- The module now requires `magento/module-config`, which is part of every Mage-OS installation.
+
+### Fixed
+
+- A file refused by PHP (over `upload_max_filesize`, partial upload) was ignored without a word; it is now reported.
+
+### Compatibility
+
+- Luma and Hyvä Theme: these changes were written from the source and not yet run in a store; unit tests cover the line parser, the access rules and the upload errors.
+- Hyvä Checkout, Loki Checkout: not applicable. Elasticsuite: suggestions still query the product collection in SQL.
+
 ## [1.1.0] - 2026-11-23
 
 Quick order lines can now be previewed, corrected and completed before anything reaches the cart, with product suggestions and a variant matrix for configurable products.

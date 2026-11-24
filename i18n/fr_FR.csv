@@ -2,7 +2,6 @@ The CSV file is too large.,Le fichier CSV est trop volumineux.
 Please upload a .csv or .txt file.,Veuillez envoyer un fichier .csv ou .txt.
 Please order at most %1 SKUs at a time.,Veuillez commander au plus %1 SKU à la fois.
 Please enter at least one SKU.,Veuillez saisir au moins un SKU.
-%1: %2,%1 : %2
 %1 product(s) added to your cart.,%1 produit(s) ajouté(s) à votre panier.
 Quick Order,Commande rapide
 "One product per line: SKU,quantity","Un produit par ligne : SKU,quantité"
@@ -19,3 +18,13 @@ Qty,Qté
 "To remove a line, clear its SKU or set its quantity to 0, then preview again.","Pour retirer une ligne, videz son SKU ou mettez sa quantité à 0, puis relancez l'aperçu."
 Preview,Aperçu
 Please preview fewer configurable products at a time.,Veuillez prévisualiser moins de produits configurables à la fois.
+Subtotal,Sous-total
+Please enter a quantity greater than 0.,Veuillez saisir une quantité supérieure à 0.
+The file could not be uploaded. Please try again.,Le fichier n'a pas pu être envoyé. Veuillez réessayer.
+"%1 line(s) could not be added. Fix them below, then add them to the cart again.","%1 ligne(s) n'ont pas pu être ajoutée(s). Corrigez-les ci-dessous, puis ajoutez-les de nouveau au panier."
+Download a sample file,Télécharger un fichier d'exemple
+Page not found.,Page introuvable.
+Enabled,Activé
+Allowed Customer Groups,Groupes de clients autorisés
+"When disabled, the quick order page answers a 404 page.","Lorsqu'elle est désactivée, la page de commande rapide renvoie une page 404."
+Visitors who are not logged in are sent to the login page when their group is not allowed; other customers get a 404 page.,Les visiteurs non connectés sont envoyés vers la page de connexion lorsque leur groupe n'est pas autorisé ; les autres clients obtiennent une page 404.

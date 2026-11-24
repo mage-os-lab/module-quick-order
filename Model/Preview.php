@@ -7,6 +7,7 @@ use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Helper\Image;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
+use Magento\Catalog\Pricing\Price\TierPriceInterface;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -22,8 +23,11 @@ use Magento\Store\Model\StoreManagerInterface;
  */
 class Preview
 {
-    /** Rows of one preview: 2 form fields each, which stays within PHP's default max_input_vars (1000). */
-    private const MAX_ROWS = 500;
+    /**
+     * Rows of one preview: 2 form fields each, plus the form key, the text area and the 3 empty rows (8 fields),
+     * which stays within PHP's default max_input_vars (1000).
+     */
+    private const MAX_ROWS = 490;
 
     /**
      * @param ProductRepositoryInterface $products
@@ -46,11 +50,12 @@ class Preview
      *
      * A configurable SKU becomes a row with a "matrix" of its variants, which takes over the lines of its children.
      *
-     * @param array<int|string,float> $lines qty by SKU
-     * @return array<int, array<string, mixed>> rows: sku, qty, name, image, price, salable, error, matrix
+     * @param array<int|string,float> $lines qty by SKU; a quantity of 0 is reported as invalid
+     * @param array<int|string,string> $errors errors the cart raised, by SKU: they replace the preview's own
+     * @return array<int, array<string, mixed>> rows: sku, qty, name, image, price, total, salable, error, matrix
      * @throws LocalizedException when the lines and the variants of their configurable products exceed MAX_ROWS
      */
-    public function build(array $lines): array
+    public function build(array $lines, array $errors = []): array
     {
         // ponytail: one full product load per line and per variant; switch to collections if previews get slow.
         $quote = $this->quoteFactory->create();
@@ -66,7 +71,14 @@ class Preview
         }
         $rows = [];
         foreach ($lines as $sku => $qty) {
-            $rows[] = $this->describe((string) $sku, $qty, $quote);
+            $row = $this->describe((string) $sku, $qty, $quote);
+            if ($qty <= 0) {
+                $row['error'] = (string) __('Please enter a quantity greater than 0.');
+            } elseif (isset($errors[$sku]) && $row['salable'] !== null) {
+                // "salable" is null for an unknown SKU, whose own message is clearer than the cart's
+                $row['error'] = $errors[$sku];
+            }
+            $rows[] = $row;
         }
         return [...$rows, ...$matrices];
     }
@@ -133,8 +145,8 @@ class Preview
      */
     private function describe(string $sku, float $qty, Quote $quote): array
     {
-        $row = ['sku' => $sku, 'qty' => $qty, 'name' => '', 'image' => '', 'price' => '', 'salable' => null,
-            'error' => '', 'matrix' => null];
+        $row = ['sku' => $sku, 'qty' => $qty, 'name' => '', 'image' => '', 'price' => '', 'total' => '',
+            'salable' => null, 'error' => '', 'matrix' => null];
         $product = $this->find($sku);
         if (!$product) {
             return ['error' => (string) __('Unknown SKU.')] + $row;
@@ -147,15 +159,33 @@ class Preview
                 $row['error'] = $e->getMessage();
             }
         }
+        $price = $this->unitPrice($product, $qty);
         return [
             'name' => (string) $product->getName(),
             'image' => $this->imageHelper->init($product, 'product_thumbnail_image')->getUrl(),
-            'price' => $this->priceCurrency->format(
-                $product->getPriceInfo()->getPrice('final_price')->getAmount()->getValue(),
-                false
-            ),
+            'price' => $this->priceCurrency->format($price, false),
+            'total' => $qty > 0 ? $this->priceCurrency->format($price * $qty, false) : '',
             'salable' => (bool) $product->isSalable(),
         ] + $row;
+    }
+
+    /**
+     * Price of one unit when $qty are ordered: the final price, or the tier price that quantity reaches.
+     *
+     * @param Product $product
+     * @param float $qty
+     */
+    private function unitPrice(Product $product, float $qty): float
+    {
+        $prices = $product->getPriceInfo();
+        $unit = (float) $prices->getPrice('final_price')->getAmount()->getValue();
+        $tiers = $prices->getPrice('tier_price');
+        foreach ($tiers instanceof TierPriceInterface ? $tiers->getTierPriceList() : [] as $tier) {
+            if ($tier['price_qty'] <= $qty) {
+                $unit = min($unit, (float) $tier['price']->getValue());
+            }
+        }
+        return $unit;
     }
 
     /**

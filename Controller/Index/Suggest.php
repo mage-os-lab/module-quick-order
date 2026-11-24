@@ -3,12 +3,14 @@ declare(strict_types=1);
 
 namespace MageOS\QuickOrder\Controller\Index;
 
+use MageOS\QuickOrder\Model\Access;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\Catalog\Model\ResourceModel\Helper;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
 use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\App\Request\Http as Request;
 use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Framework\DB\Sql\Expression;
 
 /**
  * SKU / name autocomplete of the quick order table: /quickorder/index/suggest?q=...
@@ -23,21 +25,26 @@ class Suggest implements HttpGetActionInterface
      * @param Visibility $visibility
      * @param JsonFactory $jsonFactory
      * @param Helper $dbHelper
+     * @param Access $access
      */
     public function __construct(
         private readonly Request $request,
         private readonly CollectionFactory $collectionFactory,
         private readonly Visibility $visibility,
         private readonly JsonFactory $jsonFactory,
-        private readonly Helper $dbHelper
+        private readonly Helper $dbHelper,
+        private readonly Access $access
     ) {
     }
 
     /**
      * Up to 10 products visible on the storefront whose SKU or name contains the query, as [{sku, name}].
+     *
+     * SKUs that start with the query come first, then by SKU.
      */
     public function execute()
     {
+        $this->access->check();
         $query = $this->request->getParam('q');
         $query = is_string($query) ? mb_substr(trim($query), 0, self::MAX_QUERY_LENGTH) : '';
         $products = [];
@@ -53,6 +60,11 @@ class Suggest implements HttpGetActionInterface
                     ['attribute' => 'name', 'like' => $like],
                 ])
                 ->setPageSize(10);
+            $prefix = $this->dbHelper->escapeLikeValue($query, ['position' => 'start']);
+            $collection->getSelect()->order(
+                new Expression($collection->getConnection()->quoteInto('e.sku LIKE ? DESC', $prefix))
+            );
+            $collection->setOrder('sku', 'ASC');
             foreach ($collection as $product) {
                 $products[] = ['sku' => $product->getSku(), 'name' => $product->getName()];
             }

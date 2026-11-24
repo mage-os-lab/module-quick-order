@@ -35,6 +35,7 @@ class RequestLines
      * Quantities by SKU from the "lines" text, the "csv" file and the "rows" of the preview table.
      *
      * Table rows with an empty SKU or a quantity of 0 are dropped: that is how a line is removed.
+     * A typed or uploaded line whose quantity is invalid keeps a quantity of 0, for the caller to report.
      *
      * @param bool $withMatrices also return the configurable SKUs whose variant matrix is displayed ("matrix")
      * @return array<int|string, float>
@@ -45,6 +46,14 @@ class RequestLines
         $text = $this->request->getParam('lines');
         $text = is_string($text) ? $text : '';
         $file = $this->request->getFiles('csv');
+        // PHP refused the file (upload_max_filesize, partial upload...): say so instead of ignoring it
+        $error = (int) ($file['error'] ?? UPLOAD_ERR_OK);
+        if ($error === UPLOAD_ERR_INI_SIZE || $error === UPLOAD_ERR_FORM_SIZE) {
+            throw new LocalizedException(__('The CSV file is too large.'));
+        }
+        if ($error !== UPLOAD_ERR_OK && $error !== UPLOAD_ERR_NO_FILE) {
+            throw new LocalizedException(__('The file could not be uploaded. Please try again.'));
+        }
         if (!empty($file['tmp_name'])) {
             try {
                 $uploader = $this->uploaderFactory->create(['fileId' => 'csv']);

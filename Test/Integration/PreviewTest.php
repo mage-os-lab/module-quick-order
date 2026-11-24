@@ -34,6 +34,36 @@ class PreviewTest extends AbstractController
     }
 
     /**
+     * The unit price is the tier price the quantity reaches, next to the line's subtotal.
+     */
+    #[DataFixture(ProductFixture::class, [
+        'sku' => 'quick-order-tier',
+        'price' => 10,
+        'tier_prices' => [['customer_group_id' => 32000, 'qty' => 2, 'value' => 6]],
+    ])]
+    public function testPriceFollowsTheQuantity(): void
+    {
+        $body = $this->preview(['lines' => 'quick-order-tier,3']);
+
+        $this->assertMatchesRegularExpression('/\$6\.00.*\$18\.00/s', $body);
+        $this->assertStringNotContainsString('$10.00', $body);
+    }
+
+    /**
+     * A quantity that is not a number above 0 is reported on its line.
+     */
+    #[DataFixture(ProductFixture::class, ['sku' => 'quick-order-simple'])]
+    public function testInvalidQuantityIsReported(): void
+    {
+        $body = $this->preview(['lines' => 'quick-order-simple,abc']);
+
+        $this->assertMatchesRegularExpression(
+            '/value="quick-order-simple".*Please enter a quantity greater than 0\./s',
+            $body
+        );
+    }
+
+    /**
      * A configurable SKU shows one quantity input per variant, filled from the lines of its children.
      */
     #[DataFixture(ProductFixture::class, ['sku' => 'quick-order-variant-1'], 'p1')]

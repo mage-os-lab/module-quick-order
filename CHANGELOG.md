@@ -2,7 +2,9 @@
 
 All notable changes to this module are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.2.0] - 2026-11-24
+
+Lines the cart refuses stay in the table to be corrected, the preview shows tier prices and line subtotals, and the page can be turned off or reserved to some customer groups.
 
 Upgrade: admin roles that must change the new settings need the resource *Stores > Settings > Configuration > Quick Order*. On Hyvä, rebuild the theme's styles.
 

@@ -17,7 +17,8 @@ class AccessTest extends AbstractController
     #[Config('mageos_quickorder/general/enabled', '0', 'store', 'default')]
     public function testDisabledQuickOrderIsNotFound(): void
     {
-        $this->dispatch('quickorder');
+        // full path: the test framework redirects a GET whose URI has no slash to the base URL, before routing
+        $this->dispatch('quickorder/index/index');
         $this->assert404NotFound();
     }
 
@@ -38,7 +39,8 @@ class AccessTest extends AbstractController
     #[Config('mageos_quickorder/general/customer_groups', '1', 'store', 'default')]
     public function testRefusedGuestIsSentToLogin(): void
     {
-        $this->dispatch('quickorder');
+        // full path: the test framework redirects a GET whose URI has no slash to the base URL, before routing
+        $this->dispatch('quickorder/index/index');
         $this->assertRedirect($this->stringContains('customer/account/login'));
     }
 }
